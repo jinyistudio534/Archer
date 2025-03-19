@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>Fan Rotor 自轉 - 可控制</title>
+    <style>
+        #svg-container {
+            display: block;
+            margin: 0 auto;
+            width: 400px;
+            height: 400px;
+        }
+        #controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+        #speed-slider {
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div id="svg-container"></div>
+    <div id="controls">
+        <button id="toggle-btn">啟動</button>
+        <br><br>
+        <label for="speed-slider">速度 (度/秒): </label>
+        <input type="range" id="speed-slider" min="0" max="360" value="90" step="1">
+        <span id="speed-value">90</span> 度/秒
+    </div>
+
+    <script>
+        // 你的 fan.svg 內容
+        const svgContent = `
+<svg
+   fill="#000000"
+   height="400px"
+   width="400px"
+   version="1.1"
+   id="Capa_1"
+   viewBox="0 0 612 612"
+   xml:space="preserve"
+   sodipodi:docname="fan1.svg"
+   inkscape:version="1.3 (0e150ed6c4, 2023-07-21)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+<defs id="defs2" />
+<sodipodi:namedview
+   id="namedview2"
+   pagecolor="#ffffff"
+   bordercolor="#666666"
+   borderopacity="1.0"
+   inkscape:showpageshadow="2"
+   inkscape:pageopacity="0.0"
+   inkscape:pagecheckerboard="0"
+   inkscape:deskcolor="#d1d1d1"
+   inkscape:zoom="1.01125"
+   inkscape:cx="399.50556"
+   inkscape:cy="400"
+   inkscape:window-width="1920"
+   inkscape:window-height="1027"
+   inkscape:window-x="-8"
+   inkscape:window-y="-8"
+   inkscape:window-maximized="1"
+   inkscape:current-layer="Capa_1" />
+<g id="g2">
+    <g id="Fan">
+        <path
+   d="M562.041,0C391.347,0,220.653,0,49.959,0C22.368,0,0,22.368,0,49.959c0,170.694,0,341.387,0,512.082    C0,589.632,22.368,612,49.959,612c170.694,0,341.387,0,512.082,0C589.632,612,612,589.632,612,562.041    c0-170.694,0-341.387,0-512.082C612,22.368,589.632,0,562.041,0z M49.959,37.469c6.898,0,12.49,5.592,12.49,12.49    s-5.592,12.49-12.49,12.49s-12.49-5.592-12.49-12.49S43.061,37.469,49.959,37.469z M49.959,574.531    c-6.898,0-12.49-5.592-12.49-12.49c0-6.898,5.592-12.49,12.49-12.49s12.49,5.592,12.49,12.49    C62.449,568.939,56.857,574.531,49.959,574.531z M306,554.547C168.731,554.547,57.453,443.269,57.453,306    S168.731,57.453,306,57.453S554.547,168.731,554.547,306S443.269,554.547,306,554.547z M562.041,574.531    c-6.898,0-12.49-5.592-12.49-12.49c0-6.898,5.592-12.49,12.49-12.49c6.898,0,12.49,5.592,12.49,12.49    C574.531,568.939,568.939,574.531,562.041,574.531z M562.041,62.449c-6.898,0-12.49-5.592-12.49-12.49s5.592-12.49,12.49-12.49    c6.898,0,12.49,5.592,12.49,12.49S568.939,62.449,562.041,62.449z"
+   id="path1" />
+        <path
+   d="M524.976,260.924c-1.238-6.015-3.819-10.307-8.554-14.218c-37.84-31.272-90.317-29.17-157.433,6.305    c-4.38-4.38-9.121-8.082-14.434-11.27c46.257-41.499,88.423-58.921,126.495-52.269c11.225,1.961,18.998-10.901,12.043-19.926    c-15.437-20.035-33.006-36.347-54.128-50.259c-5.13-3.378-9.989-4.586-16.103-4.005c-48.869,4.645-84.49,43.238-106.863,115.78    c-6.195,0-12.165,0.734-18.175,2.237c3.365-62.052,20.86-104.187,52.486-126.405c9.324-6.55,5.725-21.141-5.574-22.607    c-25.083-3.251-49.04-2.363-73.813,2.737c-6.015,1.238-10.307,3.819-14.218,8.554c-31.272,37.84-29.17,90.317,6.305,157.433    c-4.38,4.38-8.082,9.121-11.27,14.434c-41.499-46.257-58.921-88.423-52.269-126.495c1.961-11.225-10.901-18.998-19.926-12.044    c-20.035,15.437-36.347,33.006-50.259,54.128c-3.378,5.13-4.586,9.989-4.005,16.103c4.645,48.869,43.238,84.49,115.78,106.863    c0,6.195,0.734,12.165,2.237,18.175c-62.052-3.365-104.187-20.86-126.405-52.486c-6.55-9.324-21.141-5.725-22.607,5.574    c-3.251,25.083-2.363,49.04,2.737,73.813c1.238,6.015,3.819,10.307,8.554,14.218c37.84,31.272,90.317,29.17,157.433-6.305    c4.38,4.38,9.121,8.082,14.434,11.27c-46.257,41.499-88.423,58.921-126.495,52.269c-11.225-1.961-18.998,10.901-12.043,19.926    c15.437,20.035,33.006,36.347,54.128,50.259c5.13,3.378,9.989,4.586,16.103,4.005c48.869-4.645,84.49-43.238,106.863-115.78    c6.195,0,12.165-0.734,18.175-2.238c-3.365,62.052-20.86,104.187-52.486,126.405c-9.324,6.55-5.725,21.141,5.574,22.607    c25.083,3.251,49.04,2.363,73.813-2.737c6.015-1.238,10.307-3.819-14.218-8.554c31.272-37.84,29.17-90.317-6.305-157.433    c4.38-4.38,8.082,9.121,11.27-14.434c41.499,46.257,58.921,88.423,52.269,126.495c-1.961,11.225,10.901,18.998,19.926,12.043    c20.035-15.437,36.347-33.006,50.259-54.128c3.378-5.13,4.586-9.989,4.005-16.103c-4.645-48.869-43.238-84.49-115.78-106.863    c0-6.195-0.734-12.165-2.237-18.175c62.052,3.365,104.187,20.86,126.405,52.486c6.55,9.324,21.141,5.725,22.607-5.574    C530.964,309.653,530.076,285.698,524.976,260.924z M306,368.449c-34.489,0-62.449-27.96-62.449-62.449    s27.96-62.449,62.449-62.449s62.449,27.96,62.449,62.449S340.489,368.449,306,368.449z"
+   id="rotor" />
+    </g>
+</g>
+</svg>
+        `;
+
+        // 將 SVG 插入頁面
+        document.getElementById('svg-container').innerHTML = svgContent;
+
+        // 獲取 rotor 元素
+        const rotor = document.getElementById('rotor');
+        if (!rotor) {
+            console.error('找不到 ID 為 "rotor" 的元素！');
+            //return;
+        }
+
+        // 計算 rotor 的中心點
+        const bbox = rotor.getBBox();
+        const centerX = bbox.x + bbox.width / 2;
+        const centerY = bbox.y + bbox.height / 2;
+
+        // 旋轉角度與控制變數
+        let angle = 0;
+        let isRotating = false;
+        let speed = 90; // 初始速度為每秒 90 度 (1/4 圈)
+        let lastTime = performance.now();
+
+        // 獲取控制元件
+        const toggleBtn = document.getElementById('toggle-btn');
+        const speedSlider = document.getElementById('speed-slider');
+        const speedValue = document.getElementById('speed-value');
+
+        // 動畫函數
+        function rotateRotor(timestamp) {
+            if (isRotating) {
+                const deltaTime = timestamp - lastTime;
+                lastTime = timestamp;
+
+                // 根據速度和時間增量計算角度
+                angle += (speed * deltaTime) / 1000; // speed 是度/秒
+                if (angle >= 360) angle -= 360;
+
+                rotor.setAttribute('transform', `rotate(${angle} ${centerX} ${centerY})`);
+            }
+            requestAnimationFrame(rotateRotor);
+        }
+
+        // 啟動動畫
+        requestAnimationFrame(rotateRotor);
+
+        // 啟動/停止按鈕事件
+        toggleBtn.addEventListener('click', () => {
+            isRotating = !isRotating;
+            toggleBtn.textContent = isRotating ? '停止' : '啟動';
+            if (isRotating) lastTime = performance.now(); // 重置時間
+        });
+
+        // 速度滑桿事件
+        speedSlider.addEventListener('input', () => {
+            speed = parseFloat(speedSlider.value);
+            speedValue.textContent = speed;
+        });
+    </script>
+</body>
+</html>
